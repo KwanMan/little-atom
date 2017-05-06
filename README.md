@@ -106,7 +106,7 @@ render(initialState)
 
 ## API
 
-### `createAtom(initialState, reactors, onMutation)`
+### `createAtom(initialState, reactors, onMutation, options)`
 
 Create an atom.
 
@@ -114,16 +114,18 @@ Create an atom.
 * `reactors` - an object of `reactor` functions, keyed by the action to react to
 * `onMutation(state)` - a function called after each mutation
   * `state` - current state
+* `options` - These are mainly used for debugging purposes
+  * `options.onEmit` - a function called when a new action is emitted
+  * `options.missingReactor(action, payload)` - a function called when there is no reactor found for an action
 
 ### `reactor(payload, api)`
 
 Reacts to an action.
 
 * `payload` - the payload the action was emitted with
-* `api` - and object of shape `{ get, mutate, emit }`
-  * `api.get()` - get current state
-  * `api.mutate(update)` - mutate the state with `Object.assign({}, state, update)`
-  * `api.emit(action, payload)` - emit a new action
+* `api.get()` - get current state
+* `api.mutate(update)` - mutate the state with `Object.assign({}, state, update)`
+* `api.emit(action, payload)` - emit a new action
 
 ### `atom.emit(action, payload)`
 

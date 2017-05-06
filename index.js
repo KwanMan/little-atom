@@ -1,27 +1,34 @@
-module.exports = function createAtom (initialState, reactors, subscriber) {
+module.exports = function createAtom (initialState, reactors, onMutation, options) {
   var state = initialState || {}
   reactors = reactors || {}
 
-  return {
+  var onEmit = (options && options.onEmit) || function noop () {}
+  var onMissingReactor = (options && options.onMissingReactor) || function noop () {}
+
+  var api = {
+    get: get,
+    mutate: mutate,
     emit: emit
   }
 
-  function emit (action, payload) {
-    if (reactors[action]) {
-      reactors[action](payload, {
-        get: get,
-        mutate: mutate,
-        emit: emit
-      })
-    }
+  return { emit: emit }
+
+  function get () {
+    return Object.assign({}, state)
   }
 
   function mutate (update) {
     state = Object.assign({}, state, update)
-    subscriber(get())
+    onMutation(get())
   }
 
-  function get () {
-    return Object.assign({}, state)
+  function emit (action, payload) {
+    onEmit(action, payload)
+    var reactor = reactors[action]
+    if (!reactor) {
+      onMissingReactor(action, payload)
+    } else {
+      reactor(payload, api)
+    }
   }
 }
