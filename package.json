@@ -4,9 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "lint": "standard5",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "Tommy Kwan",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "standard5": "^1.1.1"
+  }
 }
