@@ -2,8 +2,13 @@ module.exports = function createAtom (initialState, reactors, onMutation, option
   var state = initialState || {}
   reactors = reactors || {}
 
-  var onEmit = (options && options.onEmit) || function noop () {}
-  var onMissingReactor = (options && options.onMissingReactor) || function noop () {}
+  options = Object.assign({}, {
+    onEmit: noop,
+    onMissingReactor: noop,
+    mutator: function mutator (state, update) {
+      return Object.assign({}, state, update)
+    }
+  }, options)
 
   var api = {
     get: get,
@@ -18,17 +23,19 @@ module.exports = function createAtom (initialState, reactors, onMutation, option
   }
 
   function mutate (update) {
-    state = Object.assign({}, state, update)
+    state = options.mutator(state, update)
     onMutation(get())
   }
 
   function emit (action, payload) {
-    onEmit(action, payload)
+    options.onEmit(action, payload)
     var reactor = reactors[action]
     if (!reactor) {
-      onMissingReactor(action, payload)
+      options.onMissingReactor(action, payload)
     } else {
       reactor(payload, api)
     }
   }
 }
+
+function noop () {}

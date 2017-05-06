@@ -121,6 +121,7 @@ Create an atom.
 * `options` - These are mainly used for debugging purposes
   * `options.onEmit` - a function called when a new action is emitted
   * `options.onMissingReactor(action, payload)` - a function called when there is no reactor found for an action
+  * `options.mutator(state, update)` - custom function to mutate state. By default this uses `Object.assign({}, state, update)`
 
 ### `atom.emit(action, payload)`
 
