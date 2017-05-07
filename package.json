@@ -4,13 +4,34 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "lint": "standard5",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "standard && standard5",
+    "test": "npm run lint && jest"
   },
   "keywords": [],
   "author": "Tommy Kwan",
   "license": "ISC",
   "devDependencies": {
+    "jest": "^20.0.0",
+    "standard": "^10.0.2",
     "standard5": "^1.1.1"
+  },
+  "standard5": {
+    "ignore": [
+      "**/__tests__/"
+    ]
+  },
+  "standard": {
+    "globals": [
+      "test",
+      "describe",
+      "it",
+      "beforeEach",
+      "afterEach",
+      "expect",
+      "jest"
+    ]
+  },
+  "jest": {
+    "testRegex": "(/__tests__/.*-test)\\.js$"
   }
 }
