@@ -10,13 +10,7 @@ module.exports = function createAtom (initialState, reactors, onMutation, option
     }
   }, options)
 
-  var api = {
-    get: get,
-    mutate: mutate,
-    emit: emit
-  }
-
-  return { emit: emit }
+  return { emit: createEmit([]) }
 
   function get () {
     return Object.assign({}, state)
@@ -27,13 +21,19 @@ module.exports = function createAtom (initialState, reactors, onMutation, option
     onMutation(get())
   }
 
-  function emit (action, payload) {
-    options.onEmit(action, payload)
-    var reactor = reactors[action]
-    if (!reactor) {
-      options.onMissingReactor(action, payload)
-    } else {
-      reactor(payload, api)
+  function createEmit (chain) {
+    return function emit (action, payload) {
+      chain.push({ action: action, payload: payload })
+      options.onEmit(action, payload, chain)
+
+      var reactor = reactors[action]
+      if (!reactor) return options.onMissingReactor(action, payload)
+
+      reactor(payload, {
+        get: get,
+        mutate: mutate,
+        emit: createEmit(chain.slice(0))
+      })
     }
   }
 }
