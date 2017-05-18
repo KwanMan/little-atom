@@ -15,26 +15,26 @@ const createAtom = require('little-atom')
 
 const initialState = { score: 0 }
 
-const reactors = {
-  INCREASE (points, { get, mutate, emit }) {
-    const { score } = get()
-    mutate({ score: score + points })
-    emit('CHECK_COUNT')
+const actions = {
+  increaseScore (atom, points) {
+    const { score } = atom.get()
+    atom.mutate({ score: score + points })
+    atom.checkCount()
   },
-  DECREASE (points, { get, mutate, emit }) {
-    const { score } = get()
-    mutate({ score: score - points })
+  decreaseScore (atom, points) {
+    const { score } = atom.get()
+    atom.mutate({ score: score - points })
   },
-  CHECK_COUNT (payload, { get, mutate, emit }) {
-    const { score } = get()
+  checkScore (atom, payload) {
+    const { score } = atom.get()
     if (score >= 1000) {
       console.log('You win! ...something')
-      emit('RESTART')
+      atom.restart()
     }
   },
-  RESTART (payload, { get, mutate, emit }) {
+  restart (atom, payload) {
     console.log('Restarting')
-    mutate(initialState)
+    atom.mutate(initialState)
   }
 }
 
@@ -42,15 +42,15 @@ const onMutation = ({ score }) => {
   console.log(`Your score is ${score}`)
 }
 
-const atom = createAtom(initialState, reactors, onMutation)
+const atom = createAtom(initialState, actions, onMutation)
 
-atom.emit('INCREASE', 500)
+atom.increaseScore(500)
   // -> Your score is 500
 
-atom.emit('DECREASE', 100)
+atom.decreaseScore(100)
   // -> Your score is 400
 
-atom.emit('INCREASE', 600)
+atom.increaseScore(600)
   // -> Your score is 1000
   // -> You win! ...something
   // -> Restarting
@@ -60,7 +60,7 @@ atom.emit('INCREASE', 600)
 ### Async Example
 
 ```js
-const Preact = require('preact')
+nst Preact = require('preact')
 const axios = require('axios')
 const createAtom = require('little-atom')
 
@@ -69,8 +69,8 @@ const initialState = {
   topScore: {}
 }
 
-const reactors = {
-  async LOAD_DATA (payload, { get, mutate, emit }) {
+const actions = {
+  async loadData ({ mutate }, payload) {
     mutate({ loading: true })
 
     const { data } = await axios.get('/top-score')
@@ -81,15 +81,15 @@ const reactors = {
   }
 }
 
-const atom = createAtom(initialState, reactors, render)
+const atom = createAtom(initialState, actions, render)
 
-const App = ({ emit, state }) => {
+const App = ({ loadData, state }) => {
   const { loading, topScore } = state
   if (loading) {
     return <div>Loading...</div>
   } else {
     if (typeof topScore === 'undefined') {
-      return <button onclick={() => emit('LOAD_DATA')}>Get top score</button>
+      return <button onclick={loadData}>Get top score</button>
     } else {
       return <div>{`The top score is ${topScore}`}</div>
     }
@@ -97,7 +97,7 @@ const App = ({ emit, state }) => {
 }
 
 function render (state) {
-  Preact.render(<App emit={atom.emit} state={state} />, document.body)
+  Preact.render(<App loadData={atom.actions.loadData} state={state} />, document.body)
 }
 
 render(initialState)
@@ -106,28 +106,28 @@ render(initialState)
 
 ## API
 
-### `createAtom(initialState, reactors, onMutation, options)`
+### `createAtom(initialState, actions, onMutation, options)`
 
 Create an atom.
 
 * `initialState` - should be an object, defaults to `{}`
-* `reactors` - an object of `reactor(payload, api)` functions, keyed by the action to react to
-  * `payload` - the payload the action was emitted with
-  * `api.get()` - get current state
-  * `api.mutate(update)` - mutate the state with `Object.assign({}, state, update)`
-  * `api.emit(action, payload)` - emit a new action
-* `onMutation(state)` - a function called after each mutation
+* `actions` - an object of `action(atom, payload)` functions, keyed by the action name
+  * `atom` - an instance of atom
+  * `payload` - the payload the action was called with
+* `onMutation(state, chain)` - a function called after each mutation
   * `state` - current state
+  * `chain` - the chain of actions called to arrive at this mutation (for debugging)
 * `options` - These are mainly used for debugging purposes
-  * `options.onEmit` - a function called when a new action is emitted
-  * `options.onMissingReactor(action, payload)` - a function called when there is no reactor found for an action
-  * `options.mutator(state, update)` - custom function to mutate state. By default this uses `Object.assign({}, state, update)`
+  * `options.onAction` - called when an action is run
+  * `options.mutator(state, update)` - custom function to mutate state. Defaults to `Object.assign({}, state, update)`
+  * `options.get(state)` - custom function to return a copy of the current state. Defaults to `Object.assign({}, state)`
 
-### `atom.emit(action, payload)`
+**Returns**
 
-Emit an action.
+An instance of atom
 
-* `action` - a string describing the type of action
-* `payload` - payload with information about the action
+* `atom.get()` - gets the current state
+* `atom.mutate(update)` - mutates the state with `update`
+* `atom.actions` - object of actions available with identical signature as the passed in `actions` object
 
 [tiny-atom]: https://github.com/QubitProducts/tiny-atom

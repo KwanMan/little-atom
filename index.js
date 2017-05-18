@@ -1,40 +1,49 @@
-module.exports = function createAtom (initialState, reactors, onMutation, options) {
+module.exports = function createAtom (initialState, rawActions, onMutation, options) {
   var state = initialState || {}
-  reactors = reactors || {}
 
   options = Object.assign({}, {
-    onEmit: noop,
-    onMissingReactor: noop,
+    onAction: noop,
+    get: function (state) {
+      return Object.assign({}, state)
+    },
     mutator: function mutator (state, update) {
       return Object.assign({}, state, update)
     }
   }, options)
 
-  return { emit: createEmit([]) }
+  return createAtom([])
 
-  function get () {
-    return Object.assign({}, state)
-  }
-
-  function mutate (update) {
-    state = options.mutator(state, update)
-    onMutation(get())
-  }
-
-  function createEmit (chain) {
-    return function emit (action, payload) {
-      chain.push({ action: action, payload: payload })
-      options.onEmit(action, payload, chain)
-
-      var reactor = reactors[action]
-      if (!reactor) return options.onMissingReactor(action, payload)
-
-      reactor(payload, {
-        get: get,
-        mutate: mutate,
-        emit: createEmit(chain.slice(0))
-      })
+  function createAtom (chain) {
+    return {
+      get: createGet(),
+      mutate: createMutate(chain),
+      actions: createActions(chain)
     }
+  }
+
+  function createGet () {
+    return function get () {
+      return options.get(state)
+    }
+  }
+
+  function createMutate (chain) {
+    return function mutate (update) {
+      state = options.mutator(state, update)
+      onMutation(options.get(state), chain)
+    }
+  }
+
+  function createActions (chain) {
+    var actions = {}
+    Object.keys(rawActions).forEach(function (key) {
+      actions[key] = function (payload) {
+        options.onAction(key, payload)
+        chain.push({ action: key, payload: payload })
+        rawActions[key](createAtom(chain), payload)
+      }
+    })
+    return actions
   }
 }
 

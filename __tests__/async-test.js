@@ -2,11 +2,9 @@ const createAtom = require('../index')
 
 test('async', (done) => {
   let changes = 0
-  const atom = createAtom({ count: 0 }, {
-    INCREMENT: increment
-  }, onChange)
+  const atom = createAtom({ count: 0 }, { increment }, onChange)
 
-  function increment (payload, { get, mutate }) {
+  function increment ({ get, mutate }, payload) {
     mutate({ count: get().count + 1 })
     setTimeout(() => {
       mutate({ count: get().count + 1, async: true })
@@ -25,5 +23,5 @@ test('async', (done) => {
     }
   }
 
-  atom.emit('INCREMENT')
+  atom.actions.increment()
 })

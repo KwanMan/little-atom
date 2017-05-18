@@ -1,23 +1,22 @@
 const createAtom = require('../index')
 
-function noop () {}
-
 test('chain', () => {
-  const onEmit = jest.fn()
+  const onMutation = jest.fn()
   const atom = createAtom({}, {
-    FIRST (payload, { emit }) {
-      emit('SECOND', 'payload2')
+    first ({ actions }) {
+      actions.second('payload2')
     },
-    SECOND () {}
-  }, noop, { onEmit })
+    second ({ mutate }) {
+      mutate({})
+    }
+  }, onMutation)
 
-  atom.emit('FIRST', 'payload1')
+  atom.actions.first('payload1')
 
   const expected = [
-    { action: 'FIRST', payload: 'payload1' },
-    { action: 'SECOND', payload: 'payload2' }
+    { action: 'first', payload: 'payload1' },
+    { action: 'second', payload: 'payload2' }
   ]
 
-  expect(onEmit.mock.calls[0][2]).toEqual(expected.slice(0, 1))
-  expect(onEmit.mock.calls[1][2]).toEqual(expected)
+  expect(onMutation.mock.calls[0][1]).toEqual(expected)
 })
