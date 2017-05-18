@@ -16,25 +16,25 @@ const createAtom = require('little-atom')
 const initialState = { score: 0 }
 
 const actions = {
-  increaseScore (atom, points) {
-    const { score } = atom.get()
-    atom.mutate({ score: score + points })
-    atom.checkCount()
+  increaseScore ({ get, mutate, actions }, points) {
+    const { score } = get()
+    mutate({ score: score + points })
+    actions.checkScore()
   },
-  decreaseScore (atom, points) {
-    const { score } = atom.get()
-    atom.mutate({ score: score - points })
+  decreaseScore ({ get, mutate, actions }, points) {
+    const { score } = get()
+    mutate({ score: score - points })
   },
-  checkScore (atom, payload) {
-    const { score } = atom.get()
+  checkScore ({ get, mutate, actions }, payload) {
+    const { score } = get()
     if (score >= 1000) {
       console.log('You win! ...something')
-      atom.restart()
+      actions.restart()
     }
   },
-  restart (atom, payload) {
+  restart ({ get, mutate, actions }, payload) {
     console.log('Restarting')
-    atom.mutate(initialState)
+    mutate(initialState)
   }
 }
 
@@ -44,13 +44,13 @@ const onMutation = ({ score }) => {
 
 const atom = createAtom(initialState, actions, onMutation)
 
-atom.increaseScore(500)
+atom.actions.increaseScore(500)
   // -> Your score is 500
 
-atom.decreaseScore(100)
+atom.actions.decreaseScore(100)
   // -> Your score is 400
 
-atom.increaseScore(600)
+atom.actions.increaseScore(600)
   // -> Your score is 1000
   // -> You win! ...something
   // -> Restarting
