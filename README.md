@@ -60,7 +60,7 @@ atom.actions.increaseScore(600)
 ### Async Example
 
 ```js
-nst Preact = require('preact')
+const Preact = require('preact')
 const axios = require('axios')
 const createAtom = require('little-atom')
 
